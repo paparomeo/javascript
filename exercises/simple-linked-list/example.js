@@ -1,111 +1,52 @@
-export class ElementValueRequiredException extends Error {}
-export class ElementNextNotInstanceException extends Error {}
-
 export class Element {
-  constructor(value, next) {
-    if (value === undefined) {
-      throw new ElementValueRequiredException();
-    }
-
-    if (next !== undefined && !(next instanceof Element)) {
-      throw new ElementNextNotInstanceException();
-    }
-
+  constructor(value) {
     this.value = value;
-    this.next = next;
+    this.next = null;
   }
 }
 
 export class List {
-  static fromArray(array) {
-    const list = new List();
-    array.forEach(item => list.push(new Element(item)));
-
-    return list;
+  constructor(arr) {
+    this.head = null;
+    if (arr) {
+      arr.forEach(el => this.add(new Element(el)));
+    }
   }
 
-  push(value) {
-    const newEl = (value instanceof Element)
-      ? value
-      : new Element(value);
-
-    if (!this.head) {
-      this.head = newEl;
-      return;
-    }
-
-    let lastEl = this.head;
-    while (lastEl.next) {
-      lastEl = lastEl.next;
-    }
-
-    lastEl.next = newEl;
+  get length() {
+    return this.head ? this.countElements(1, this.head) : 0;
   }
 
-  unshift(value) {
-    const newEl = (value instanceof Element)
-      ? value
-      : new Element(value);
-
-    newEl.next = this.head;
-    this.head = newEl;
+  add(el) {
+    const element = el;
+    element.next = this.head;
+    this.head = element;
   }
 
-  shift() {
-    if (!this.head) {
-      return;
+  countElements(c, element) {
+    let count = c;
+    while (element.next) {
+      count += 1;
+      return this.countElements(count, element.next);
     }
-
-    this.head = this.head.next;
+    return count;
   }
 
-  pop() {
-    if (!this.head) {
-      return;
-    }
-
-    let penultEl;
-    let lastEl = this.head;
-
-    while (lastEl.next) {
-      penultEl = lastEl;
-      lastEl = lastEl.next;
-    }
-
-    if (!penultEl) {
-      this.head = undefined;
-    } else {
-      penultEl.next = undefined;
-    }
+  toArray(arr = [], element = this.head) {
+    arr.push(element.value);
+    return element && element.next ? this.toArray(arr, element.next) : arr;
   }
 
   reverse() {
-    if (!this.head) {
-      return;
+    let prev = null;
+    let cursor = this.head;
+    while (cursor.next) {
+      this.head = cursor.next;
+      cursor.next = prev;
+      prev = cursor;
+      cursor = this.head;
     }
-
-    let current;
-    let previous;
-
-    while (this.head) {
-      current = this.head;
-      this.shift();
-      current.next = previous;
-      previous = current;
-    }
-
-    this.head = previous;
-  }
-
-  toArray() {
-    const array = [];
-    let current = this.head;
-
-    while (current) {
-      array.push(current.value);
-      current = current.next;
-    }
-
-    return array;
+    this.head.next = prev;
+    return this;
   }
 }
